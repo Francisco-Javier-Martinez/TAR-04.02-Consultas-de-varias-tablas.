@@ -1,0 +1,133 @@
+/*TAR-04.02 Consultas de varias tablas.*/
+/*Francisco Javier Martinez Fernandez*/
+/*Crear bd en sql server*/
+CREATE TABLE jesuita(
+	idJesuita tinyint identity NOT NULL PRIMARY KEY,
+	codigo char(60) NULL, 
+	nombre varchar(50) NOT NULL UNIQUE,
+	nombreAlumno varchar(100)NOT NULL UNIQUE,
+	firma varchar(300) NOT NULL,
+	firmaIngles varchar(300) NOT NULL
+);
+
+CREATE TABLE lugar(
+	ip char(15) NOT NULL PRIMARY KEY,
+	nombre_maquina char(12) NOT NULL,
+	lugar varchar(30) NOT NULL
+);
+
+CREATE TABLE visita(
+    idVisita  smallint NOT NULL identity PRIMARY KEY,
+	idJesuita tinyint  NOT NULL,
+	ip char(15) NOT NULL,
+	fechaHora datetime NOT NULL default SYSDATETIMEOFFSET(),
+	CONSTRAINT Lugar_Visita FOREIGN KEY (ip) REFERENCES lugar(ip),
+	CONSTRAINT Jesuita_Visita FOREIGN KEY (idJesuita) REFERENCES jesuita(idJesuita)
+);
+/*Meter Jesuitas*/
+INSERT INTO jesuita (codigo, nombre, nombreAlumno, firma, firmaIngles) VALUES ('1111', 'jesu1', 'alu1', 'hola', 'hello'),
+('2222', 'jesu2', 'alu2', 'hola', 'hello'),
+('3333', 'jesu3', 'alu3', 'hola', 'hello'),
+('4444', 'jesu4', 'alu4', 'hola', 'hello'),
+('5555', 'jesu5', 'alu5', 'hola', 'hello');
+/*Meter lugares*/
+INSERT INTO lugar (ip, nombre_maquina, lugar) VALUES ('192.168.2.42', '15', 'Cadiz'),
+('192.168.2.43', '16', 'Badajoz'),
+('192.168.2.44', '17', 'Madrid'),
+('192.168.2.45', '18', 'Sevilla');
+/*Meter visitas*/
+INSERT INTO visita (idJesuita, ip, fechaHora) 
+VALUES(1, '192.168.2.42', DEFAULT), 
+(2, '192.168.2.43', DEFAULT), 
+(3, '192.168.2.44', DEFAULT), 
+(4, '192.168.2.45', DEFAULT), 
+(5, '192.168.2.42', DEFAULT);
+
+/*1- Muestra las visitas con el nombre del jesuita que las has realizado.*/
+SELECT idVisita,nombre
+		FROM visita INNER JOIN jesuita ON visita.idJesuita=jesuita.idJesuita;
+
+/*2- Muestra todas las visitas con el nombre
+ del jesuita que las ha realizado y el nombre (lugar) de lugar visitado.*/
+SELECT idVisita,nombre,lugar
+		FROM visita INNER JOIN lugar on visita.ip=lugar.ip
+			INNER JOIN jesuita ON visita.idJesuita=jesuita.idJesuita;
+
+/*3- Añade un jesuita nuevo. Este jesuita no va a realizar ninguna visita.*/
+INSERT INTO jesuita (codigo, nombre, nombreAlumno, firma, firmaIngles) VALUES ('6666', 'jesu6', 'alu6', 'hola', 'hello');
+
+/*4- Añade 2 lugares nuevos. Estos lugares no se van a visitar.*/
+INSERT INTO lugar (ip, nombre_maquina, lugar) VALUES ('192.168.2.46', '19', 'Girona'),
+('192.168.2.47', '20', 'Barcelona');
+
+/*5- Muestra todos los jesuitas con el nombre del lugar que han visitado.
+Si algún jesuita no ha realizado visita, también habrá que visualizar sus datos, 
+mira que ocurre con el valor del campo lugar en estos casos.
+Realiza 2 versiones de la misma consulta, una usando LEFT y otra usando RIGHT.*/
+SELECT idVisita,nombre,lugar
+		FROM visita LEFT  JOIN lugar on visita.ip=lugar.ip
+			RIGHT JOIN jesuita ON visita.idJesuita=jesuita.idJesuita;
+
+/*6- Muestra todos los lugares con el nombre del jesuita que realiza la visitada. 
+Si algún lugar no se ha visitado, también habrá que visualizar sus datos ´mira que ocurre 
+con el valor del campo nombre (jesuita) en estos casos.*/
+SELECT idVisita,nombre,lugar
+		FROM visita RIGHT  JOIN lugar on visita.ip=lugar.ip
+			LEFT JOIN jesuita ON visita.idJesuita=jesuita.idJesuita;
+			
+/*7- Mirando los resultado de la consulta anterior,
+intenta mostrar solo los lugares que NO se han visitado
+(es la consulta anterior con una condición).*/
+SELECT idVisita,nombre,lugar
+		FROM visita RIGHT  JOIN lugar on visita.ip=lugar.ip
+			LEFT JOIN jesuita ON visita.idJesuita=jesuita.idJesuita
+			WHERE idVisita is NULL;
+
+/*8- Muestra todos los jesuitas con el nombre del lugar que han visitado.
+Si algún jesuita no ha realizado visita, también habrá que visualizar sus datos y si
+algún lugar no se ha visitado también se muestra su nombre (lugar).
+Realiza esta consulta en 2 pasos y ve comprobado qué ocurre al hacer el JOIN.*/
+SELECT idVisita,nombre,lugar
+		FROM visita RIGHT  JOIN lugar on visita.ip=lugar.ip
+			LEFT JOIN jesuita ON visita.idJesuita=jesuita.idJesuita
+			UNION
+SELECT idVisita,nombre,lugar
+		FROM visita LEFT  JOIN lugar on visita.ip=lugar.ip
+			RIGHT JOIN jesuita ON visita.idJesuita=jesuita.idJesuita;
+
+/*9- Muestra el nombre de los jesuitas que han realizado alguna visitas
+(no hay que mostrar ningún dato más de la visita).*/
+SELECT distinct nombre
+		FROM visita INNER JOIN jesuita ON visita.idJesuita=jesuita.idJesuita;
+		
+/*10- piensa otra consulta diferente con DISTINCT (con la misma base de datos).*/
+SELECT Distinct lugar.ip,lugar -- Voy a sacar el litado con de lugares que han sido visitado mostrando la ip sin que haya repeticiones
+		FROM visita INNER JOIN lugar on visita.ip=lugar.ip;Piensa otra consulta diferente con DISTINCT (con la misma base de datos).
+
+/*Consultas para probar los operadores de la cláusula WHERE:
+-Busca una necesidad de consultas con la base de datos jesuitas y 
+usa cada uno de los operadores. Tienes que poner los enunciados y también la solución.*/
+-- sacar visitas de badajoz y cadiz con el nombre del lugar y jesuita que lo visito
+SELECT idVisita,nombre,lugar
+		FROM visita INNER JOIN lugar on visita.ip=lugar.ip
+			INNER JOIN jesuita ON visita.idJesuita=jesuita.idJesuita
+			WHERE lugar='Badajoz' or lugar='Cadiz';
+-- distintos a badajoz cadiz
+SELECT idVisita,nombre,lugar
+		FROM visita INNER JOIN lugar on visita.ip=lugar.ip
+			INNER JOIN jesuita ON visita.idJesuita=jesuita.idJesuita
+			WHERE lugar!='Badajoz' and lugar!='Cadiz';
+			
+-- lista del 1-2 de lo jesuitas que han visitado un lugar
+SELECT nombre,lugar
+		FROM visita INNER JOIN lugar on visita.ip=lugar.ip
+			INNER JOIN jesuita ON visita.idJesuita=jesuita.idJesuita
+			WHERE jesuita.idJesuita in (1,2);
+			
+-- BETWEEN sacar listado de visita de la fecha 31 a la hora 8h 9h
+SELECT *
+	FROM visita
+		WHERE fechaHora BETWEEN '2025-31-03 08:00:00' AND '2025-31-03 9:00:00';
+
+/*LIKE*/
+--   * Lugares con IP que terminen en  (completa el enunciado según tus datos).
