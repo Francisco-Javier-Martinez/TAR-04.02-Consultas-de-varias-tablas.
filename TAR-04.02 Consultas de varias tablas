@@ -102,7 +102,7 @@ SELECT distinct nombre
 		
 /*10- piensa otra consulta diferente con DISTINCT (con la misma base de datos).*/
 SELECT Distinct lugar.ip,lugar -- Voy a sacar el litado con de lugares que han sido visitado mostrando la ip sin que haya repeticiones
-		FROM visita INNER JOIN lugar on visita.ip=lugar.ip;Piensa otra consulta diferente con DISTINCT (con la misma base de datos).
+		FROM visita INNER JOIN lugar on visita.ip=lugar.ip;
 
 /*Consultas para probar los operadores de la cláusula WHERE:
 -Busca una necesidad de consultas con la base de datos jesuitas y 
@@ -129,5 +129,40 @@ SELECT *
 	FROM visita
 		WHERE fechaHora BETWEEN '2025-31-03 08:00:00' AND '2025-31-03 9:00:00';
 
-/*LIKE*/
---   * Lugares con IP que terminen en  (completa el enunciado según tus datos).
+/*LIKE %: Representa cero, uno o múltiples caracteres y _ representa un unico caracter*/
+--   * Lugares con IP que terminen en  45(completa el enunciado según tus datos).
+SELECT *
+	FROM lugar
+		WHERE ip LIKE '%.45';
+-- Jesuitas que sean santos (comienzan por la palabra San ) no tengo ninguno con san pongo que empieze por jesu.
+SELECT *
+	FROM jesuita
+		WHERE nombre LIKE 'jesu%';
+--   * Otras consultas con LIKE (pueden ser de 2 o 3 tablas).
+SELECT idVisita, nombre
+	FROM visita INNER JOIN jesuita 
+			ON visita.idJesuita = jesuita.idJesuita
+				WHERE nombre LIKE 'jesu%';
+/*- Todos los operadores se pueden negar, menos el IS 
+(ya que se preguntaría por NOT NULL). 
+Realiza consultas negando estos operadores,
+de nuevo tienes que poner los enunciados con su solución.*/
+SELECT idVisita,nombre,lugar
+		FROM visita INNER JOIN lugar on visita.ip=lugar.ip
+			INNER JOIN jesuita ON visita.idJesuita=jesuita.idJesuita
+			WHERE lugar!='Badajoz' and lugar!='Cadiz';
+			
+-- lista del 1-2 de lo jesuitas que han visitado un lugar
+SELECT nombre,lugar
+		FROM visita INNER JOIN lugar on visita.ip=lugar.ip
+			INNER JOIN jesuita ON visita.idJesuita=jesuita.idJesuita
+			WHERE jesuita.idJesuita NOT in (1,2);
+			
+-- BETWEEN sacar listado de visita de la fecha 31 a la hora 8h 9h
+SELECT *
+	FROM visita
+		WHERE fechaHora NOT BETWEEN '2025-03-31 08:00:00' AND '2025-03-31 09:00:00';
+-- is not null
+Select idJesuita,nombre,codigo
+	From jesuita
+		where codigo is not null
